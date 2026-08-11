@@ -1,195 +1,788 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Hydroponics AI</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Hydroponics — Control Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#061418;
+    --bg-2:#0c2b28;
+    --bg-3:#123a36;
+    --aqua:#4fd1c5;
+    --aqua-soft:rgba(79,209,197,0.16);
+    --lime:#a8e063;
+    --lime-soft:rgba(168,224,99,0.16);
+    --glass:rgba(255,255,255,0.055);
+    --glass-strong:rgba(255,255,255,0.09);
+    --border:rgba(255,255,255,0.12);
+    --border-soft:rgba(255,255,255,0.07);
+    --text-1:#eaf6f3;
+    --text-2:rgba(234,246,243,0.62);
+    --text-3:rgba(234,246,243,0.38);
+    --off:rgba(255,255,255,0.10);
+    --danger:#ff8a7a;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:10px;
+  }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+  *{box-sizing:border-box; margin:0; padding:0;}
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(45deg, #1cb5e0, #000046);
-            padding: 20px;
-        }
+  html{-webkit-font-smoothing:antialiased;}
 
-        /* Glassmorphism Container */
-        .glass-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            width: 100%;
-            max-width: 800px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            color: white;
-            display: flex;
-            gap: 40px;
-            transition: transform 0.3s ease;
-        }
+  body{
+    min-height:100vh;
+    font-family:'Inter', sans-serif;
+    color:var(--text-1);
+    background:
+      radial-gradient(ellipse 900px 600px at 12% -10%, rgba(79,209,197,0.16), transparent 60%),
+      radial-gradient(ellipse 800px 700px at 110% 10%, rgba(168,224,99,0.10), transparent 55%),
+      radial-gradient(ellipse 1000px 800px at 50% 120%, rgba(18,58,54,0.9), transparent 60%),
+      linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 48%, var(--bg-3) 100%);
+    background-attachment:fixed;
+    padding:clamp(20px, 4vw, 56px);
+    position:relative;
+    overflow-x:hidden;
+  }
 
-        .glass-container:hover {
-            transform: translateY(-5px);
-        }
+  /* ambient floating bubbles */
+  .bubble{
+    position:fixed;
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(79,209,197,0.20), rgba(79,209,197,0) 70%);
+    filter:blur(2px);
+    pointer-events:none;
+    animation: drift linear infinite;
+    z-index:0;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.7; }
+    90%{ opacity:0.5; }
+    100%{ transform:translateY(-120vh) translateX(30px); opacity:0; }
+  }
 
-        h2 {
-            margin-bottom: 20px;
-            font-weight: 600;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
 
-        .input-section, .output-section {
-            flex: 1;
-        }
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+  }
 
-        .input-group {
-            margin-bottom: 15px;
-        }
+  /* ---------- header ---------- */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
 
-        label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-            opacity: 0.9;
-        }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--aqua);
+    margin-bottom:14px;
+  }
+  .eyebrow .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--aqua);
+    box-shadow:0 0 0 0 rgba(79,209,197,0.6);
+    animation:pulseDot 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseDot{
+    0%{ box-shadow:0 0 0 0 rgba(79,209,197,0.55); }
+    70%{ box-shadow:0 0 0 8px rgba(79,209,197,0); }
+    100%{ box-shadow:0 0 0 0 rgba(79,209,197,0); }
+  }
 
-        input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            outline: none;
-            transition: 0.3s;
-        }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(30px, 4.4vw, 46px);
+    line-height:1.05;
+    letter-spacing:-0.01em;
+  }
+  h1 span{
+    background:linear-gradient(100deg, var(--aqua), var(--lime));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
 
-        input::placeholder { color: rgba(255,255,255,0.6); }
-        input:focus { background: rgba(255, 255, 255, 0.3); }
+  .subtitle{
+    color:var(--text-2);
+    font-size:15px;
+    margin-top:10px;
+    max-width:46ch;
+  }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%);
-            color: #000;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 201, 255, 0.4);
-        }
+  /* connection pill */
+  .conn-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--glass);
+    border:1px solid var(--border);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    padding:12px 16px;
+    border-radius:999px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    min-width:260px;
+  }
+  .conn-card input{
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--text-1);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    flex:1;
+    min-width:0;
+  }
+  .conn-card input::placeholder{ color:var(--text-3); }
+  .status-led{
+    width:9px; height:9px; border-radius:50%;
+    flex-shrink:0;
+    background:var(--text-3);
+    box-shadow:0 0 0 0 transparent;
+    transition:all .4s ease;
+  }
+  .status-led.ok{ background:var(--lime); box-shadow:0 0 10px 2px rgba(168,224,99,0.6); }
+  .status-led.bad{ background:var(--danger); box-shadow:0 0 10px 2px rgba(255,138,122,0.55); }
+  .status-led.checking{ background:var(--aqua); animation:pulseDot 1s ease-in-out infinite; }
 
-        button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.6);
-        }
+  /* water-flow divider (signature element) */
+  .flow-divider{
+    position:relative;
+    height:34px;
+    margin:36px 0 34px;
+    overflow:hidden;
+    border-radius:999px;
+  }
+  .flow-divider svg{
+    position:absolute; top:0; left:0;
+    width:200%; height:100%;
+    animation:flow 9s linear infinite;
+  }
+  @keyframes flow{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-50%); }
+  }
 
-        .output-card {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+  /* ---------- layout ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:920px){
+    .grid{ grid-template-columns:1fr; }
+  }
 
-        .status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--border);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border-radius:var(--radius-lg);
+    padding:clamp(20px, 3vw, 32px);
+    box-shadow:0 20px 60px -30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+    position:relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute; inset:0;
+    border-radius:inherit;
+    padding:1px;
+    background:linear-gradient(135deg, rgba(79,209,197,0.35), transparent 40%, rgba(168,224,99,0.18));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    pointer-events:none;
+    opacity:0.7;
+  }
 
-        .status.on { background: #92FE9D; color: #000; }
-        .status.off { background: #ff4b2b; color: #fff; }
+  .panel-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:19px;
+    margin-bottom:4px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .panel-desc{
+    color:var(--text-2);
+    font-size:13.5px;
+    margin-bottom:24px;
+  }
 
-        @media (max-width: 768px) {
-            .glass-container { flex-direction: column; }
-        }
-    </style>
+  /* ---------- form ---------- */
+  .field-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:520px){
+    .field-grid{ grid-template-columns:1fr; }
+  }
+
+  .field{ display:flex; flex-direction:column; gap:8px; }
+  .field.span-2{ grid-column:1 / -1; }
+
+  .field label{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--text-2);
+    font-family:'JetBrains Mono', monospace;
+    display:flex;
+    justify-content:space-between;
+  }
+  .field label .unit{ color:var(--text-3); text-transform:none; letter-spacing:0; }
+
+  .field-input-wrap{ position:relative; }
+
+  input[type="number"]{
+    width:100%;
+    background:rgba(255,255,255,0.045);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    color:var(--text-1);
+    font-size:14.5px;
+    font-family:'Inter', sans-serif;
+    transition:border-color .25s ease, background .25s ease, box-shadow .25s ease;
+    -moz-appearance:textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance:none; margin:0;
+  }
+  input[type="number"]:hover{ background:rgba(255,255,255,0.065); }
+  input[type="number"]:focus{
+    outline:none;
+    border-color:var(--aqua);
+    background:rgba(79,209,197,0.06);
+    box-shadow:0 0 0 4px rgba(79,209,197,0.12);
+  }
+
+  /* range sliders for a couple key fields */
+  .range-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  input[type="range"]{
+    flex:1;
+    -webkit-appearance:none;
+    appearance:none;
+    height:4px;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--aqua) 0%, var(--aqua) var(--fill,50%), rgba(255,255,255,0.12) var(--fill,50%));
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(79,209,197,0.35), 0 2px 6px rgba(0,0,0,0.4);
+    cursor:pointer;
+    transition:box-shadow .2s ease;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover{ box-shadow:0 0 0 6px rgba(79,209,197,0.4); }
+  .range-val{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--aqua);
+    min-width:52px;
+    text-align:right;
+  }
+
+  /* buttons */
+  .btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    letter-spacing:0.01em;
+    border-radius:999px;
+    padding:14px 26px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transition:transform .18s ease, box-shadow .25s ease, filter .25s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .btn:active{ transform:scale(0.97); }
+
+  .btn-primary{
+    color:#04211d;
+    background:linear-gradient(100deg, var(--aqua), var(--lime));
+    box-shadow:0 10px 30px -8px rgba(79,209,197,0.55);
+    width:100%;
+    margin-top:26px;
+  }
+  .btn-primary:hover{ filter:brightness(1.07); box-shadow:0 14px 34px -8px rgba(79,209,197,0.7); }
+  .btn-primary:disabled{
+    opacity:0.55; cursor:not-allowed; filter:grayscale(0.3);
+    box-shadow:none;
+  }
+
+  .btn-primary .spinner{
+    width:15px; height:15px;
+    border-radius:50%;
+    border:2px solid rgba(4,33,29,0.35);
+    border-top-color:#04211d;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  .btn-primary.loading .spinner{ display:inline-block; }
+  .btn-primary.loading .btn-label{ opacity:0.75; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .btn-ghost{
+    background:var(--glass-strong);
+    border:1px solid var(--border);
+    color:var(--text-1);
+    font-size:12.5px;
+    padding:9px 16px;
+  }
+  .btn-ghost:hover{ background:rgba(255,255,255,0.13); }
+
+  /* ---------- results ---------- */
+  .actuator-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .actuator{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:rgba(255,255,255,0.035);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    transition:border-color .35s ease, background .35s ease, transform .3s ease;
+  }
+  .actuator.state-on{
+    border-color:rgba(168,224,99,0.4);
+    background:linear-gradient(90deg, rgba(168,224,99,0.08), rgba(79,209,197,0.05));
+  }
+
+  .actuator-icon{
+    width:40px; height:40px;
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--off);
+    flex-shrink:0;
+    transition:background .35s ease, box-shadow .35s ease;
+  }
+  .actuator.state-on .actuator-icon{
+    background:var(--lime-soft);
+    box-shadow:0 0 18px -2px rgba(168,224,99,0.5);
+  }
+  .actuator-icon svg{ width:20px; height:20px; stroke:var(--text-2); transition:stroke .35s ease; }
+  .actuator.state-on .actuator-icon svg{ stroke:var(--lime); }
+
+  .actuator-info{ flex:1; min-width:0; }
+  .actuator-name{ font-size:14px; font-weight:600; font-family:'Space Grotesk', sans-serif; }
+  .actuator-sub{ font-size:12px; color:var(--text-3); margin-top:2px; }
+
+  .actuator-toggle{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    padding:6px 12px;
+    border-radius:999px;
+    background:var(--off);
+    color:var(--text-2);
+    flex-shrink:0;
+    transition:all .35s ease;
+  }
+  .actuator.state-on .actuator-toggle{
+    background:var(--lime);
+    color:#0c2b1c;
+    box-shadow:0 0 14px -2px rgba(168,224,99,0.7);
+  }
+
+  .empty-state{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:10px;
+    padding:40px 10px;
+    color:var(--text-3);
+  }
+  .empty-state svg{ width:44px; height:44px; opacity:0.5; stroke:var(--aqua); }
+  .empty-state p{ font-size:13px; max-width:26ch; }
+
+  .error-banner{
+    display:none;
+    align-items:flex-start;
+    gap:10px;
+    background:rgba(255,138,122,0.08);
+    border:1px solid rgba(255,138,122,0.3);
+    color:#ffd2ca;
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-size:12.5px;
+    margin-bottom:18px;
+  }
+  .error-banner.show{ display:flex; }
+
+  .timestamp-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+    padding-top:16px;
+    border-top:1px solid var(--border-soft);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--text-3);
+  }
+
+  footer{
+    margin-top:40px;
+    text-align:center;
+    color:var(--text-3);
+    font-size:12px;
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  ::selection{ background:rgba(79,209,197,0.35); }
+</style>
 </head>
 <body>
 
-    <div class="glass-container">
-        <!-- Input Form -->
-        <div class="input-section">
-            <h2>Sensor Inputs</h2>
-            <div class="input-group"><label for="pH">pH Level</label><input type="number" id="pH" value="7.0" step="0.1"></div>
-            <div class="input-group"><label for="TDS">TDS</label><input type="number" id="TDS" value="450"></div>
-            <div class="input-group"><label for="water_level">Water Level</label><input type="number" id="water_level" value="3"></div>
-            <div class="input-group"><label for="DHT_temp">DHT Temp (°C)</label><input type="number" id="DHT_temp" value="25.5" step="0.1"></div>
-            <div class="input-group"><label for="DHT_humidity">DHT Humidity (%)</label><input type="number" id="DHT_humidity" value="60"></div>
-            <div class="input-group"><label for="water_temp">Water Temp (°C)</label><input type="number" id="water_temp" value="20.0" step="0.1"></div>
-            <div class="input-group"><label for="hour">Hour of Day (0-23)</label><input type="number" id="hour" value="12"></div>
-            <div class="input-group"><label for="minute">Minute (0-59)</label><input type="number" id="minute" value="30"></div>
-            <button onclick="predict()">Analyze Data</button>
-        </div>
+<div class="wrap">
 
-        <!-- Output Display -->
-        <div class="output-section">
-            <h2>Actuator Status</h2>
-            <div id="results">
-                <!-- Javascript will populate this -->
-                <p style="opacity: 0.7;">Click analyze to get AI predictions...</p>
-            </div>
-        </div>
+  <header>
+    <div>
+      <div class="eyebrow"><span class="dot"></span>Hydroponics System</div>
+      <h1>Root &amp; <span>Reservoir</span> Control</h1>
+      <p class="subtitle">Feed the latest sensor readings to the model and see which actuators it decides to switch on.</p>
     </div>
 
-    <script>
-        async function predict() {
-            const data = {
-                pH: parseFloat(document.getElementById('pH').value),
-                TDS: parseFloat(document.getElementById('TDS').value),
-                water_level: parseFloat(document.getElementById('water_level').value),
-                DHT_temp: parseFloat(document.getElementById('DHT_temp').value),
-                DHT_humidity: parseFloat(document.getElementById('DHT_humidity').value),
-                water_temp: parseFloat(document.getElementById('water_temp').value),
-                hour: parseInt(document.getElementById('hour').value)
-            };
+    <div class="conn-card">
+      <span class="status-led" id="statusLed"></span>
+      <input id="apiBase" type="text" value="http://localhost:8000" placeholder="API base URL" spellcheck="false">
+      <button class="btn-ghost" id="checkBtn" style="border-radius:999px;">Check</button>
+    </div>
+  </header>
 
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<p>Analyzing...</p>';
+  <div class="flow-divider">
+    <svg viewBox="0 0 1600 40" preserveAspectRatio="none">
+      <path d="M0 20 Q 40 0, 80 20 T 160 20 T 240 20 T 320 20 T 400 20 T 480 20 T 560 20 T 640 20 T 720 20 T 800 20 T 880 20 T 960 20 T 1040 20 T 1120 20 T 1200 20 T 1280 20 T 1360 20 T 1440 20 T 1520 20 T 1600 20"
+        fill="none" stroke="url(#g1)" stroke-width="2" opacity="0.55"/>
+      <path d="M0 20 Q 40 0, 80 20 T 160 20 T 240 20 T 320 20 T 400 20 T 480 20 T 560 20 T 640 20 T 720 20 T 800 20 T 880 20 T 960 20 T 1040 20 T 1120 20 T 1200 20 T 1280 20 T 1360 20 T 1440 20 T 1520 20 T 1600 20"
+        transform="translate(800,0)" fill="none" stroke="url(#g1)" stroke-width="2" opacity="0.55"/>
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#4fd1c5"/>
+          <stop offset="100%" stop-color="#a8e063"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
 
-            try {
-                const response = await fetch('http://127.0.0.1:8000/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                resultsDiv.innerHTML = '';
-                
-                for (const [actuator, status] of Object.entries(result)) {
-                    const statusClass = status === 'ON' ? 'on' : 'off';
-                    const name = actuator.replace('_', ' ').toUpperCase();
-                    resultsDiv.innerHTML += `
-                        <div class="output-card">
-                            <span>${name}</span>
-                            <span class="status ${statusClass}">${status}</span>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = '<p style="color: #ff4b2b;">Error connecting to API. Is FastAPI running?</p>';
-            }
-        }
-    </script>
+  <div class="grid">
+
+    <!-- ============ FORM PANEL ============ -->
+    <section class="panel">
+      <div class="panel-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fd1c5" stroke-width="1.8"><path d="M12 2s6 6.5 6 11a6 6 0 1 1-12 0c0-4.5 6-11 6-11z"/></svg>
+        Sensor Readings
+      </div>
+      <p class="panel-desc">Enter current values from the reservoir and grow-room sensors.</p>
+
+      <div class="error-banner" id="errorBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff8a7a" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="errorText">Something went wrong.</span>
+      </div>
+
+      <form id="sensorForm">
+        <div class="field-grid">
+
+          <div class="field span-2">
+            <label>pH Level <span class="unit" id="phVal">6.5</span></label>
+            <div class="range-row">
+              <input type="range" id="pH" min="0" max="14" step="0.1" value="6.5" style="--fill:46%">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>TDS <span class="unit">ppm</span></label>
+            <input type="number" id="TDS" step="1" value="650" required>
+          </div>
+
+          <div class="field">
+            <label>Water Level <span class="unit">%</span></label>
+            <input type="number" id="water_level" step="0.1" min="0" max="100" value="72" required>
+          </div>
+
+          <div class="field">
+            <label>Air Temp <span class="unit">°C</span></label>
+            <input type="number" id="DHT_temp" step="0.1" value="27.5" required>
+          </div>
+
+          <div class="field">
+            <label>Air Humidity <span class="unit">%</span></label>
+            <input type="number" id="DHT_humidity" step="0.1" value="58" required>
+          </div>
+
+          <div class="field">
+            <label>Water Temp <span class="unit">°C</span></label>
+            <input type="number" id="water_temp" step="0.1" value="24.2" required>
+          </div>
+
+          <div class="field">
+            <label>Time <span class="unit">hh : mm</span></label>
+            <div style="display:flex; gap:8px;">
+              <input type="number" id="hour" min="0" max="23" value="14" required style="width:50%">
+              <input type="number" id="minute" min="0" max="59" value="30" required style="width:50%">
+            </div>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="predictBtn">
+          <span class="spinner"></span>
+          <span class="btn-label">Run Prediction</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- ============ RESULTS PANEL ============ -->
+    <section class="panel">
+      <div class="panel-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a8e063" stroke-width="1.8"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+        Actuator Output
+      </div>
+      <p class="panel-desc">Live decision from <code style="color:var(--aqua)">/predict</code>.</p>
+
+      <div id="resultsArea">
+        <div class="empty-state" id="emptyState">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 2s6 6.5 6 11a6 6 0 1 1-12 0c0-4.5 6-11 6-11z"/></svg>
+          <p>Run a prediction to see which actuators the model switches on.</p>
+        </div>
+
+        <div class="actuator-list" id="actuatorList" style="display:none;"></div>
+
+        <div class="timestamp-row" id="timestampRow" style="display:none;">
+          <span>Last prediction</span>
+          <span id="timestampVal">—</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>Smart Hydroponics · Control Panel</footer>
+</div>
+
+<script>
+  // ---------- ambient bubbles ----------
+  const bubbleCount = 10;
+  for(let i=0;i<bubbleCount;i++){
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 20 + Math.random()*70;
+    b.style.width = size+'px';
+    b.style.height = size+'px';
+    b.style.left = Math.random()*100+'vw';
+    b.style.bottom = '-10vh';
+    b.style.animationDuration = (14 + Math.random()*16)+'s';
+    b.style.animationDelay = (Math.random()*14)+'s';
+    document.body.appendChild(b);
+  }
+
+  // ---------- config ----------
+  const apiBaseInput = document.getElementById('apiBase');
+  const statusLed = document.getElementById('statusLed');
+  const checkBtn = document.getElementById('checkBtn');
+
+  function getBase(){
+    return apiBaseInput.value.trim().replace(/\/+$/,'');
+  }
+
+  async function checkConnection(){
+    statusLed.className = 'status-led checking';
+    try{
+      const res = await fetch(getBase() + '/', { method:'GET' });
+      if(res.ok){
+        statusLed.className = 'status-led ok';
+      } else {
+        statusLed.className = 'status-led bad';
+      }
+    }catch(e){
+      statusLed.className = 'status-led bad';
+    }
+  }
+  checkBtn.addEventListener('click', checkConnection);
+  window.addEventListener('load', checkConnection);
+
+  // ---------- pH slider ----------
+  const phSlider = document.getElementById('pH');
+  const phVal = document.getElementById('phVal');
+  function updatePhFill(){
+    const pct = (phSlider.value / 14) * 100;
+    phSlider.style.setProperty('--fill', pct + '%');
+    phVal.textContent = parseFloat(phSlider.value).toFixed(1);
+  }
+  phSlider.addEventListener('input', updatePhFill);
+  updatePhFill();
+
+  // ---------- actuator meta ----------
+  const actuatorMeta = {
+    pH_reducer: {
+      name: 'pH Reducer',
+      sub: 'Doses acid to lower pH',
+      icon: '<path d="M12 2s6 6.5 6 11a6 6 0 1 1-12 0c0-4.5 6-11 6-11z"/>'
+    },
+    add_water: {
+      name: 'Water Inlet',
+      sub: 'Tops up the reservoir',
+      icon: '<path d="M12 2 5 12a7 7 0 1 0 14 0L12 2z"/>'
+    },
+    nutrients_adder: {
+      name: 'Nutrient Doser',
+      sub: 'Injects nutrient solution',
+      icon: '<path d="M9 2v6l-5 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-9V2"/><path d="M9 2h6"/>'
+    },
+    humidifier: {
+      name: 'Humidifier',
+      sub: 'Raises grow-room humidity',
+      icon: '<path d="M12 22c4.5 0 7-3 7-6.5C19 12 12 4 12 4S5 12 5 15.5C5 19 7.5 22 12 22z"/>'
+    },
+    ex_fan: {
+      name: 'Exhaust Fan',
+      sub: 'Vents excess heat / humidity',
+      icon: '<circle cx="12" cy="12" r="3"/><path d="M12 2c1 3 3 3 4 1s3-1 3 2-2 3-1 4 3 1 1 3-3 1-4-1-3-1-3 2 2 3 1 4-3 1-3-2-3-1-4 1-3 1-3-2 2-3 1-4-3-1-1-3 3-1 4 1z"/>'
+    }
+  };
+
+  const form = document.getElementById('sensorForm');
+  const predictBtn = document.getElementById('predictBtn');
+  const emptyState = document.getElementById('emptyState');
+  const actuatorList = document.getElementById('actuatorList');
+  const timestampRow = document.getElementById('timestampRow');
+  const timestampVal = document.getElementById('timestampVal');
+  const errorBanner = document.getElementById('errorBanner');
+  const errorText = document.getElementById('errorText');
+
+  function showError(msg){
+    errorText.textContent = msg;
+    errorBanner.classList.add('show');
+  }
+  function hideError(){
+    errorBanner.classList.remove('show');
+  }
+
+  function renderResults(data){
+    actuatorList.innerHTML = '';
+    Object.keys(actuatorMeta).forEach(key => {
+      const meta = actuatorMeta[key];
+      const state = (data[key] || 'OFF').toUpperCase();
+      const isOn = state === 'ON';
+
+      const row = document.createElement('div');
+      row.className = 'actuator' + (isOn ? ' state-on' : '');
+      row.innerHTML = `
+        <div class="actuator-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${meta.icon}</svg>
+        </div>
+        <div class="actuator-info">
+          <div class="actuator-name">${meta.name}</div>
+          <div class="actuator-sub">${meta.sub}</div>
+        </div>
+        <div class="actuator-toggle">${state}</div>
+      `;
+      actuatorList.appendChild(row);
+    });
+
+    emptyState.style.display = 'none';
+    actuatorList.style.display = 'flex';
+    timestampRow.style.display = 'flex';
+    timestampVal.textContent = new Date().toLocaleTimeString();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError();
+
+    const payload = {
+      pH: parseFloat(document.getElementById('pH').value),
+      TDS: parseFloat(document.getElementById('TDS').value),
+      water_level: parseFloat(document.getElementById('water_level').value),
+      DHT_temp: parseFloat(document.getElementById('DHT_temp').value),
+      DHT_humidity: parseFloat(document.getElementById('DHT_humidity').value),
+      water_temp: parseFloat(document.getElementById('water_temp').value),
+      hour: parseInt(document.getElementById('hour').value, 10),
+      minute: parseInt(document.getElementById('minute').value, 10)
+    };
+
+    for (const [k, v] of Object.entries(payload)) {
+      if (Number.isNaN(v)) {
+        showError(`Please provide a valid numeric value for "${k}".`);
+        return;
+      }
+    }
+
+    predictBtn.classList.add('loading');
+    predictBtn.disabled = true;
+
+    try {
+      const res = await fetch(getBase() + '/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Server responded ${res.status}: ${text.slice(0,180)}`);
+      }
+
+      const data = await res.json();
+      renderResults(data);
+      statusLed.className = 'status-led ok';
+    } catch (err) {
+      showError(err.message || 'Could not reach the prediction API. Check the base URL and CORS settings.');
+      statusLed.className = 'status-led bad';
+    } finally {
+      predictBtn.classList.remove('loading');
+      predictBtn.disabled = false;
+    }
+  });
+</script>
+
 </body>
 </html>

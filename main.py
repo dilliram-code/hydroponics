@@ -22,6 +22,8 @@ class SensorData(BaseModel):
     DHT_humidity: float
     water_temp: float
     hour: int
+    minute: int
+    
 @app.get("/")
 def welcome():
   return {"message": "Welcome!"}

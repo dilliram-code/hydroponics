@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Hydroponics AI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #1cb5e0, #000046);
+            padding: 20px;
+        }
+
+        /* Glassmorphism Container */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            color: white;
+            display: flex;
+            gap: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-container:hover {
+            transform: translateY(-5px);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .input-section, .output-section {
+            flex: 1;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input::placeholder { color: rgba(255,255,255,0.6); }
+        input:focus { background: rgba(255, 255, 255, 0.3); }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%);
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 201, 255, 0.4);
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.6);
+        }
+
+        .output-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.on { background: #92FE9D; color: #000; }
+        .status.off { background: #ff4b2b; color: #fff; }
+
+        @media (max-width: 768px) {
+            .glass-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        <!-- Input Form -->
+        <div class="input-section">
+            <h2>Sensor Inputs</h2>
+            <div class="input-group"><label for="pH">pH Level</label><input type="number" id="pH" value="7.0" step="0.1"></div>
+            <div class="input-group"><label for="TDS">TDS</label><input type="number" id="TDS" value="450"></div>
+            <div class="input-group"><label for="water_level">Water Level</label><input type="number" id="water_level" value="3"></div>
+            <div class="input-group"><label for="DHT_temp">DHT Temp (°C)</label><input type="number" id="DHT_temp" value="25.5" step="0.1"></div>
+            <div class="input-group"><label for="DHT_humidity">DHT Humidity (%)</label><input type="number" id="DHT_humidity" value="60"></div>
+            <div class="input-group"><label for="water_temp">Water Temp (°C)</label><input type="number" id="water_temp" value="20.0" step="0.1"></div>
+            <div class="input-group"><label for="hour">Hour of Day (0-23)</label><input type="number" id="hour" value="12"></div>
+            <div class="input-group"><label for="minute">Minute (0-59)</label><input type="number" id="minute" value="30"></div>
+            <button onclick="predict()">Analyze Data</button>
+        </div>
+
+        <!-- Output Display -->
+        <div class="output-section">
+            <h2>Actuator Status</h2>
+            <div id="results">
+                <!-- Javascript will populate this -->
+                <p style="opacity: 0.7;">Click analyze to get AI predictions...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function predict() {
+            const data = {
+                pH: parseFloat(document.getElementById('pH').value),
+                TDS: parseFloat(document.getElementById('TDS').value),
+                water_level: parseFloat(document.getElementById('water_level').value),
+                DHT_temp: parseFloat(document.getElementById('DHT_temp').value),
+                DHT_humidity: parseFloat(document.getElementById('DHT_humidity').value),
+                water_temp: parseFloat(document.getElementById('water_temp').value),
+                hour: parseInt(document.getElementById('hour').value)
+            };
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Analyzing...</p>';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                resultsDiv.innerHTML = '';
+                
+                for (const [actuator, status] of Object.entries(result)) {
+                    const statusClass = status === 'ON' ? 'on' : 'off';
+                    const name = actuator.replace('_', ' ').toUpperCase();
+                    resultsDiv.innerHTML += `
+                        <div class="output-card">
+                            <span>${name}</span>
+                            <span class="status ${statusClass}">${status}</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<p style="color: #ff4b2b;">Error connecting to API. Is FastAPI running?</p>';
+            }
+        }
+    </script>
+</body>
+</html>
